@@ -81,9 +81,10 @@ PART 1 : LINES
 
 -  2) Empty lines are ignored.
 
--  3) Every line starting with a COMMENT CHARACTER (in 1st position) is a comment : line ignored.
+-  3) Every COMMENT CHARACTER marks a comment section.
+      Every characters from this one until the next LINE_END CHARACTER will be ignored.
 
--  4) Every non-commented line must be composed by a key-value pair as described here :
+-  4) Every line must be composed by a key-value pair as described here :
   - 4.b) The name of the current configuration field (1 byte minimum)
   - 4.c) One or more SEPARATION CHARACTERS
   - 4.d) The value of the configuration field (1 byte minimum)
