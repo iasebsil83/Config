@@ -49,6 +49,12 @@ COMMENT_CHARACTER     = '#'
 LINE_END_CHARACTER    = '\n'
 SEPARATION_CHARACTERS = ('\t', ' ') # We use the 1st character of this collection to generate Config text
 
+#options
+BLANKS_BEFORE_COMMENTS_ALLOWED = True #disable it if you want to store blanks as values
+
+#fixed values (DO NOT MODIFY IT)
+BLANKS = (' ', '\t') #do not confuse with SEPARATION_CHARACTERS, this is TOTALLY DIFFERENT
+
 
 
 
@@ -84,52 +90,99 @@ def fromText(text):
 	#for each line
 	for l,line in enumerate(lines):
 
-		#empty line or comment => ignore
-		if len(line) == 0 or line[0] == COMMENT_CHARACTER:
-			continue
-
 		#reset fields (current_value is reset in separation field analysis)
 		current_state = IN_NAME
 		current_name  = ""
 
 		#for each character in line
-		for c in line:
+		line_len = len(line)
+		for c in range(line_len):
 
-			#case 1: reading name
+			#arriving on a comment => stopping line parsing
+			if line[c] == COMMENT_CHARACTER:
+				break
+
+			#case 2.1: reading name
 			if current_state == IN_NAME:
 
-				#separation found => turn into separation mode
-				if c in SEPARATION_CHARACTERS:
+				#separation found
+				if line[c] in SEPARATION_CHARACTERS:
+
+					#check name length before going further
+					if len(current_name) == 0:
+						raise ValueError("Missing name (line " + str(l+1) + ").")
+
+					#turn into separation mode
 					current_state = IN_SEPARATION
 					continue
 
 				#regular character => add it to current name
-				current_name += c
+				current_name += line[c]
 
-			#case 2: reading separation field
+			#case 2.2: reading separation field
 			elif current_state == IN_SEPARATION:
 
 				#regular character => reading value now
-				if c not in SEPARATION_CHARACTERS:
+				if line[c] not in SEPARATION_CHARACTERS:
 					current_state = IN_VALUE
-					current_value = c
+					current_value = line[c]
+
+					#option : allow spacing before comments
+					if BLANKS_BEFORE_COMMENTS_ALLOWED and current_value in BLANKS:
+						raise ValueError("Blank value can't be stored : blanks before comments are allowed (line " + str(l+1) + ")")
 					continue
 
-			#case 3: reading value
+			#case 2.3: reading value
 			else:
 
+				#option : allow spacing before comments
+				if BLANKS_BEFORE_COMMENTS_ALLOWED:
+					if line[c] in BLANKS:
+
+						#check the rest of the line
+						endLineParsing = False
+						for c in range(c+1, line_len):
+							if line[c] == COMMENT_CHARACTER: #comment found => finish line
+								endLineParsing = True
+								break
+
+							#else, only blanks are allowed
+							elif line[c] not in BLANKS:
+								raise ValueError("Non-blank character detected in blanks-before-comment section (line " + str(l+1) + ").")
+
+						#comment really found => end line parsing (correct format)
+						if endLineParsing:
+							break
+
+						#no comment found at the end
+						else:
+							raise ValueError("Missing comment after ending-blanks section (line " + str(l+1) + ").")
+
 				#separation character found => ERROR (several separations are not allowed)
-				if c in SEPARATION_CHARACTERS:
-					raise ValueError("Could not parse Config text, several separation fields detected (line " + str(l) + ").")
+				if line[c] in SEPARATION_CHARACTERS:
+					raise ValueError("Could not parse Config text, several separation fields detected (line " + str(l+1) + ").")
 
 				#regular text => add it to the current value
-				current_value += c
+				current_value += line[c]
 
-		#finished reading line => check fields
-		if len(current_name) == 0:
-			raise ValueError("Could not parse Config text, missing name field (line " + str(l) + ").")
-		if len(current_value) == 0:
-			raise ValueError("Could not parse Config text, missing value field (line " + str(l) + ").")
+		#check name
+		current_name_len = len(current_name)
+		if current_state == IN_NAME:
+
+			#empty line (or comment only)
+			if current_name_len == 0:
+				continue
+
+			#only name defined
+			else:
+				raise ValueError("Missing separation character after name (line " + str(l+1) + ").")
+
+		#check other fields
+		else:
+			if current_name_len == 0:
+				raise ValueError("Could not parse Config text, missing name field (line " + str(l+1) + ").")
+			if len(current_value) == 0:
+				raise ValueError("Could not parse Config text, missing value field (line " + str(l+1) + ").")
 
 		#correct configuration structure
 		result[current_name] = current_value
