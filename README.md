@@ -56,11 +56,11 @@ In this section, you will see all you have to know about Config in just a few li
 
 ### Special Variables
 
-All the interpretation of the syntax is based on 3 special character sets defined as follow :
+All the interpretation of the syntax is based on 3 special characters defined as follow :
 ```python
-COMMENT    CHARACTER  : '#'
-LINE_END   CHARACTER  : '\n'        #line feed
-SEPARATION CHARACTERS : (' ', '\t') #spaces & tabulations
+COMMENT    CHARACTER : '#'
+LINE_END   CHARACTER : '\n' #line feed
+SEPARATION CHARACTER : '\t' #tabulation
 ```
 They are customizable in the settings of all Config programs/libraries.
 
@@ -86,13 +86,16 @@ PART 1 : LINES
 
 -  4) Every line must be composed by a key-value pair as described here :
   - 4.b) The name of the current configuration field (1 byte minimum)
-  - 4.c) One or more SEPARATION CHARACTERS
+  - 4.c) One or more SEPARATION CHARACTER
   - 4.d) The value of the configuration field (1 byte minimum)
+
+
+
+OPTION : ADDITIONAL_SPACES_ALLOWED (enabled by default)
+  If enabled, spaces (' ') are tolerated everywhere on lines and they are ignored.
 ```
 
 Pay attention to those rules : Every non-matching format will raise an error on parsing.
-
-Note that an option can be enabled to allow additional spaces in non-text fields.
 
 &nbsp;
 
