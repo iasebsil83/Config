@@ -45,15 +45,12 @@
 # ---- CONSTANTS ----
 
 #special characters
-COMMENT_CHARACTER     = '#'
-LINE_END_CHARACTER    = '\n'
-SEPARATION_CHARACTERS = ('\t', ' ') # We use the 1st character of this collection to generate Config text
+COMMENT_CHARACTER    = '#'
+LINE_END_CHARACTER   = '\n'
+SEPARATION_CHARACTER = '\t'
 
 #options
-BLANKS_BEFORE_COMMENTS_ALLOWED = True #disable it if you want to store blanks as values
-
-#fixed values (DO NOT MODIFY IT)
-BLANKS = (' ', '\t') #do not confuse with SEPARATION_CHARACTERS, this is TOTALLY DIFFERENT
+ADDITIONAL_SPACES_ALLOWED = True #disable it if you want to store blanks for instance
 
 
 
@@ -98,6 +95,11 @@ def fromText(text):
 		line_len = len(line)
 		for c in range(line_len):
 
+			#option : allow additional spacing
+			if ADDITIONAL_SPACES_ALLOWED:
+				if line[c] == ' ':
+					continue
+
 			#arriving on a comment => stopping line parsing
 			if line[c] == COMMENT_CHARACTER:
 				break
@@ -106,7 +108,7 @@ def fromText(text):
 			if current_state == IN_NAME:
 
 				#separation found
-				if line[c] in SEPARATION_CHARACTERS:
+				if line[c] == SEPARATION_CHARACTER:
 
 					#check name length before going further
 					if len(current_name) == 0:
@@ -123,43 +125,19 @@ def fromText(text):
 			elif current_state == IN_SEPARATION:
 
 				#regular character => reading value now
-				if line[c] not in SEPARATION_CHARACTERS:
+				if line[c] != SEPARATION_CHARACTER:
 					current_state = IN_VALUE
-					current_value = line[c]
 
 					#option : allow spacing before comments
-					if BLANKS_BEFORE_COMMENTS_ALLOWED and current_value in BLANKS:
-						raise ValueError("Blank value can't be stored : blanks before comments are allowed (line " + str(l+1) + ")")
+					if not ADDITIONAL_SPACES_ALLOWED or current_value != ' ':
+						current_value = line[c]
 					continue
 
 			#case 2.3: reading value
 			else:
 
-				#option : allow spacing before comments
-				if BLANKS_BEFORE_COMMENTS_ALLOWED:
-					if line[c] in BLANKS:
-
-						#check the rest of the line
-						endLineParsing = False
-						for c in range(c+1, line_len):
-							if line[c] == COMMENT_CHARACTER: #comment found => finish line
-								endLineParsing = True
-								break
-
-							#else, only blanks are allowed
-							elif line[c] not in BLANKS:
-								raise ValueError("Non-blank character detected in blanks-before-comment section (line " + str(l+1) + ").")
-
-						#comment really found => end line parsing (correct format)
-						if endLineParsing:
-							break
-
-						#no comment found at the end
-						else:
-							raise ValueError("Missing comment after ending-blanks section (line " + str(l+1) + ").")
-
 				#separation character found => ERROR (several separations are not allowed)
-				if line[c] in SEPARATION_CHARACTERS:
+				if line[c] == SEPARATION_CHARACTER:
 					raise ValueError("Could not parse Config text, several separation fields detected (line " + str(l+1) + ").")
 
 				#regular text => add it to the current value
@@ -213,7 +191,7 @@ def toText(data):
 	#parse data
 	result = ""
 	for d in data.keys():
-		result += d + SEPARATION_CHARACTERS[0] + data[d] + LINE_END_CHARACTER
+		result += d + SEPARATION_CHARACTER + data[d] + LINE_END_CHARACTER
 
 	return result
 
