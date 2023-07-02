@@ -92,6 +92,8 @@ PART 1 : LINES
 
 Pay attention to those rules : Every non-matching format will raise an error on parsing.
 
+Note that an option can be enabled to allow additional spaces in non-text fields.
+
 &nbsp;
 
 &nbsp;
