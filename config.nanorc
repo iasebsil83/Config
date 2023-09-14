@@ -1,0 +1,30 @@
+## Here is a syntax coloration example for configuration files.
+
+syntax  config "\.(conf|cfg)$"
+header  "^#!.*(conf|cfg)"
+magic   "Configuration file"
+comment "#"
+
+# WARNING: Because we need to use exclusion statements : [^...] , regexes contains tabulation & space characters.
+#          This file has been edited using a 4 spaces display format for tabulations.
+#          Be careful when copying/modifying them.
+
+# ERROR 1 : Too much fields
+color brightred ".*"
+
+# Value (2 fields)       ------------------            ----------------
+color blue "^[[:space:]]*[^#	 ][^	 ]*[[:space:]]+[^#	 ][^	 ]*"
+
+# Keyword (1 field)        ----------------
+color yellow "^[[:space:]]*[^#	 ][^	 ]*"
+
+# ERROR 2 : Only 1 field      -----------------
+color brightred "^[[:space:]]*[^#	 ][^	 ]*[[:space:]]*(#.*)?$"
+
+# Comments (If you want to include character '#' in your config fields, I recommend you to use
+#           character '%' as comment character instead.
+#           This is why the percentage symbol is also colored as a comment)
+color cyan "(#|%).*$"
+
+# Trailing blanks
+color ,green "[[:space:]]+$"
