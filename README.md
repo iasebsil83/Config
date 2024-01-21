@@ -30,7 +30,7 @@ We are currently on branch **python**.
 
 ## Information
 
-All information about DREAMLANDS is centralized in branch [master](https://github.com/iasebsil83/DREAMLANDS).
+All information about Config is centralized in branch [master](https://github.com/iasebsil83/Config).
 
 &nbsp;
 
