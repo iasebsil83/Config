@@ -1,0 +1,226 @@
+/* .---------------- Config Z Library [0.1.0] ----------------.
+   |                                                          |
+   |     This library is the official parser tool for Config  |
+   | files. It includes 4 functions :                         |
+   |   - ^Config.fromText() get data from raw text            |
+   |   - ^Config.toText()   get raw text from data            |
+   |   - ^Config.read()     get data from file                |
+   |   - ^Config.write()    write data into file              |
+   |                                                          |
+   |     For more information about this syntax, please check |
+   | out the main repository for documentation:               |
+   |                                                          |
+   |           https://github.com/iasebsil83/config           |
+   |                                                          |
+   | Let's Code !                                     By I.A. |
+   |                                                          |
+   |*********************************************************************|
+   |  LICENSE :                                                          |
+   |                                                                     |
+   |  Config_Z                                                           |
+   |  Copyright (C) 2024 Sebastien SILVANO                               |
+   |                                                                     |
+   |  This library is free software; you can redistribute it and/or      |
+   |  modify it under the terms of the GNU Lesser General Public         |
+   |  License as published by the Free Software Foundation; either       |
+   |  version 2.1 of the License, or (at your option) any later version. |
+   |                                                                     |
+   |  This library is distributed in the hope that it will be useful,    |
+   |  but WITHOUT ANY WARRANTY; without even the implied warranty of     |
+   |  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  |
+   |  Lesser General Public License for more details.                    |
+   |                                                                     |
+   |  You should have received a copy of the GNU Lesser General Public   |
+   |  License along with this library.                                   |
+   |                                                                     |
+   |  If not, see <https://www.gnu.org/licenses/>.                       |
+   '---------------------------------------------------------------------'
+*/
+
+
+
+
+
+
+// ---------------- IMPORTATIONS ----------------
+
+//errors
+imp ../../error
+
+
+
+
+
+
+// ---------------- MODULE ----------------
+
+//module
+mod Config {
+
+	// ---- CONSTANTS ----
+
+	//special characters
+	COMMENT_CHARACTER    = '#'
+	LINE_END_CHARACTER   = '\n'
+	SEPARATION_CHARACTER = '\t'
+
+	//options
+	ADDITIONAL_SPACES_ALLOWED = true //disable it if you want to store blanks for instance
+
+
+
+
+
+
+	// ---- DATA <-> TEXT ----
+
+	atm fromText(str text) {
+		atm result
+
+		//parsing states
+		enm {
+			IN_NAME,
+			IN_SEPARATION,
+			IN_VALUE
+		}
+
+		//current state
+		current_state = IN_NAME
+		current_name  = ""
+		current_value = ""
+
+		//split text by lines
+		lines = text.splitByChr(^.LINE_END_CHARACTER)
+
+		//for each line
+		for l in lines {
+			line = lines[l]
+
+			//reset fields (current_value is reset in separation field analysis)
+			current_state = IN_NAME
+			current_name  = ""
+
+			//for each character in line
+			for c in line {
+
+				//option : allow additional spacing
+				if ADDITIONAL_SPACES_ALLOWED {
+					if line[c] == ' ' { ctn }
+				}
+
+				//arriving on a comment => stopping line parsing
+				if line[c] == COMMENT_CHARACTER { brk }
+
+				//case 2.1: reading name
+				if current_state == IN_NAME {
+
+					//separation found
+					if line[c] == SEPARATION_CHARACTER {
+
+						//check name length before going further
+						if current_name.length == 0l {
+							^Err.fatal("Missing name (line " + (l+1).toStr() + ").")
+						}
+
+						//turn into separation mode
+						current_state = IN_SEPARATION; ctn
+					}
+
+					//regular character => add it to current name
+					current_name + line[c]
+				}
+
+				//case 2.2: reading separation field
+				elf current_state == IN_SEPARATION {
+
+					//regular character => reading value now
+					if line[c] != SEPARATION_CHARACTER {
+						current_state = IN_VALUE
+
+						//option : allow spacing before comments
+						if !ADDITIONAL_SPACES_ALLOWED || current_value != ' ' {
+							current_value = line[c]
+						}; ctn
+					}
+				}
+
+				//case 2.3: reading value
+				els {
+
+					//separation character found => ERROR (several separations are not allowed)
+					if line[c] == SEPARATION_CHARACTER {
+						^Err.fatal("Could not parse Config text, several separation fields detected (line " + (l+1).toStr() + ").")
+					}
+
+					//regular text => add it to the current value
+					current_value + line[c]
+				}
+			}
+
+			//check name
+			if current_state == IN_NAME {
+
+				//empty line (or comment only)
+				if current_name.length == 0l { ctn }
+
+				//only name defined
+				els {
+					^Err.fatal("Missing separation character after name (line " + (l+1).toStr() + ").")
+				}
+			}
+
+			//check other fields
+			els {
+				if current_name_len == 0l {
+					^Err.fatal("Could not parse Config text, missing name field (line " + (l+1).toStr() + ").")
+				}
+				if current_value.length == 0l {
+					^Err.fatal("Could not parse Config text, missing value field (line " + (l+1).toStr() + ").")
+				}
+			}
+
+			//correct configuration structure
+			result[current_name] = current_value
+		}
+		ret result
+	}
+
+
+
+	//data -> to text
+	str toText(atm data) {
+
+		//check data complexity
+		for d ovr data.keys() {
+			if !isinstance(data[d], str):
+				^Err.fatal("Could not unparse Config text, name '" + d + "' has incorrect type (only str allowed).")
+			}
+		}
+
+		//parse data
+		result = ""
+		for d ovr data.keys() {
+			result += d + SEPARATION_CHARACTER + data[d] + LINE_END_CHARACTER
+		}
+		ret result
+	}
+
+
+
+
+
+
+	// ---- READ / WRITE ----
+
+	//read text from file => return data as dict
+	atm read(str filename) {
+		ret ^.fromText(^IO.readFile(filename))
+	}
+
+
+
+	//write data into file
+	voi write(str filename, atm data) {
+		^IO.writeFile(filename, ^.toText(data))
+	}
+}

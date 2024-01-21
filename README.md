@@ -20,7 +20,7 @@ This project is divided in different branches :
 - [Go    ](https://github.com/iasebsil83/config/tree/go), library for reading/writting configuration files in Go.
 - [Lua   ](https://github.com/iasebsil83/config/tree/lua), library for reading/writting configuration files in Lua.
 
-We are currently on branch **python**.
+We are currently on branch **Z**.
 
 &nbsp;
 
@@ -30,7 +30,7 @@ We are currently on branch **python**.
 
 ## Information
 
-All information about DREAMLANDS is centralized in branch [master](https://github.com/iasebsil83/DREAMLANDS).
+All information about Config is centralized in branch [master](https://github.com/iasebsil83/Config).
 
 &nbsp;
 
