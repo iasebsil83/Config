@@ -74,8 +74,8 @@ mod Config {
 
 	// ---- DATA <-> TEXT ----
 
-	atm fromText(str text) {
-		atm result
+	map[str,str] fromText(str text) {
+		map[str,str] result
 
 		//parsing states
 		enm {
@@ -104,23 +104,21 @@ mod Config {
 			for c in line {
 
 				//option : allow additional spacing
-				if ADDITIONAL_SPACES_ALLOWED {
+				if ^.ADDITIONAL_SPACES_ALLOWED {
 					if line[c] == ' ' { ctn }
 				}
 
 				//arriving on a comment => stopping line parsing
-				if line[c] == COMMENT_CHARACTER { brk }
+				if line[c] == ^.COMMENT_CHARACTER { brk }
 
 				//case 2.1: reading name
 				if current_state == IN_NAME {
 
 					//separation found
-					if line[c] == SEPARATION_CHARACTER {
+					if line[c] == ^.SEPARATION_CHARACTER {
 
 						//check name length before going further
-						if current_name.length == 0l {
-							^Err.fatal("Missing name (line " + (l+1).toStr() + ").")
-						}
+						if current_name.length == 0l { ^Err.fatal("Missing name (line " + (l+1).toStr() + ").") }
 
 						//turn into separation mode
 						current_state = IN_SEPARATION; ctn
@@ -134,11 +132,11 @@ mod Config {
 				elf current_state == IN_SEPARATION {
 
 					//regular character => reading value now
-					if line[c] != SEPARATION_CHARACTER {
+					if line[c] != ^.SEPARATION_CHARACTER {
 						current_state = IN_VALUE
 
 						//option : allow spacing before comments
-						if !ADDITIONAL_SPACES_ALLOWED || current_value != ' ' {
+						if !^.ADDITIONAL_SPACES_ALLOWED || current_value != ' ' {
 							current_value = line[c]
 						}; ctn
 					}
@@ -148,7 +146,7 @@ mod Config {
 				els {
 
 					//separation character found => ERROR (several separations are not allowed)
-					if line[c] == SEPARATION_CHARACTER {
+					if line[c] == ^.SEPARATION_CHARACTER {
 						^Err.fatal("Could not parse Config text, several separation fields detected (line " + (l+1).toStr() + ").")
 					}
 
@@ -188,19 +186,10 @@ mod Config {
 
 
 	//data -> to text
-	str toText(atm data) {
-
-		//check data complexity
-		for d ovr data.keys() {
-			if !isinstance(data[d], str):
-				^Err.fatal("Could not unparse Config text, name '" + d + "' has incorrect type (only str allowed).")
-			}
-		}
-
-		//parse data
+	str toText(map[str,str] data) {
 		result = ""
-		for d ovr data.keys() {
-			result += d + SEPARATION_CHARACTER + data[d] + LINE_END_CHARACTER
+		for d ovr data.keys {
+			result += d + ^.SEPARATION_CHARACTER + data[d] + ^.LINE_END_CHARACTER
 		}
 		ret result
 	}
