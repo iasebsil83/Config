@@ -1,0 +1,41 @@
+// ---- IMPORTATIONS ----
+
+//dreamlands
+imp ../config
+
+
+
+
+
+
+// ---- EXECUTION ----
+
+// EXAMPLE 1 : READING
+
+//read a dreamlands file
+myComputer_config = cfg.read("oldComputer.cfg")
+
+//display parsed content
+^IO.println("EXAMPLE 1 : Configuration read from \'oldComputer.cfg\' : ")
+^IO.println(myComputer_config)
+^IO.printChr('\n')
+
+
+
+// EXAMPLE 2 : WRITING
+
+//create a new configuration
+newComputer_config = :[
+	"CPU_ARCHITECTURE" : "x86_64",
+	"GPU_MEMORY_TYPE"  : "GDDR5",
+	"RAM_TYPE"         : "DDR5",
+	"RAM_SIZE"         : "16GB"
+]
+
+//get Config text equivalent
+^IO.println("EXAMPLE 2 : Writing :")
+^IO.println(newComputer_config)
+^IO.println("in file 'newComputer.cfg'.")
+
+//write into a config file
+^CFG.write(newComputer_config, "newComputer.cfg")
