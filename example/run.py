@@ -48,4 +48,4 @@ print(newComputer_config)
 print("in file 'newComputer.cfg'.")
 
 #write into a config file
-cfg.write(newComputer_config, "newComputer.cfg")
+cfg.write("newComputer.cfg", newComputer_config)

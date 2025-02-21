@@ -48,12 +48,12 @@
 
 # ---- CONSTANTS ----
 
-#special characters
+#special characters (default values)
 COMMENT_CHARACTER    = '#'
 LINE_END_CHARACTER   = '\n'
 SEPARATION_CHARACTER = '\t'
 
-#options
+#options (default values)
 ADDITIONAL_SPACES_ALLOWED = True #disable it if you want to store blanks for instance
 
 
@@ -63,7 +63,17 @@ ADDITIONAL_SPACES_ALLOWED = True #disable it if you want to store blanks for ins
 
 # ---- DATA <-> TEXT ----
 
-def fromText(text):
+def fromText(
+	text,
+
+	#characters
+	comment_character        = COMMENT_CHARACTER,
+	lineEnd_character        = LINE_END_CHARACTER,
+	separation_character     = SEPARATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed = ADDITIONAL_SPACES_ALLOWED
+):
 	'''
 	Convert a Config text into dictionnary.
 
@@ -86,7 +96,7 @@ def fromText(text):
 	current_value = ""
 
 	#split text by lines
-	lines = text.split(LINE_END_CHARACTER)
+	lines = text.split(lineEnd_character)
 
 	#for each line
 	for l,line in enumerate(lines):
@@ -100,19 +110,19 @@ def fromText(text):
 		for c in range(line_len):
 
 			#option : allow additional spacing
-			if ADDITIONAL_SPACES_ALLOWED:
+			if additionnalSpacesAllowed:
 				if line[c] == ' ':
 					continue
 
 			#arriving on a comment => stopping line parsing
-			if line[c] == COMMENT_CHARACTER:
+			if line[c] == comment_character:
 				break
 
 			#case 2.1: reading name
 			if current_state == IN_NAME:
 
 				#separation found
-				if line[c] == SEPARATION_CHARACTER:
+				if line[c] == separation_character:
 
 					#check name length before going further
 					if len(current_name) == 0:
@@ -129,11 +139,11 @@ def fromText(text):
 			elif current_state == IN_SEPARATION:
 
 				#regular character => reading value now
-				if line[c] != SEPARATION_CHARACTER:
+				if line[c] != separation_character:
 					current_state = IN_VALUE
 
 					#option : allow spacing before comments
-					if not ADDITIONAL_SPACES_ALLOWED or current_value != ' ':
+					if not additionnalSpacesAllowed or current_value != ' ':
 						current_value = line[c]
 					continue
 
@@ -141,7 +151,7 @@ def fromText(text):
 			else:
 
 				#separation character found => ERROR (several separations are not allowed)
-				if line[c] == SEPARATION_CHARACTER:
+				if line[c] == separation_character:
 					raise ValueError("Could not parse Config text, several separation fields detected (line " + str(l+1) + ").")
 
 				#regular text => add it to the current value
@@ -174,7 +184,13 @@ def fromText(text):
 
 
 #data -> to text
-def toText(data):
+def toText(
+	data,
+
+	#characters
+	lineEnd_character    = LINE_END_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+):
 	'''
 	Convert a dictionnary into Config text.
 
@@ -195,7 +211,7 @@ def toText(data):
 	#parse data
 	result = ""
 	for d in data.keys():
-		result += d + SEPARATION_CHARACTER + data[d] + LINE_END_CHARACTER
+		result += d + separation_character + data[d] + lineEnd_character
 
 	return result
 
@@ -207,7 +223,17 @@ def toText(data):
 # ---- READ / WRITE ----
 
 #read text from file => return data as dict
-def read(filename):
+def read(
+	filename,
+
+	#characters
+	comment_character        = COMMENT_CHARACTER,
+	lineEnd_character        = LINE_END_CHARACTER,
+	separation_character     = SEPARATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed = ADDITIONAL_SPACES_ALLOWED
+):
 	'''
 	Read a Config file.
 
@@ -222,24 +248,50 @@ def read(filename):
 	f.close()
 
 	#parse
-	return fromText(text)
+	return fromText(
+		text,
+
+		#characters
+		comment_character        = comment_character,
+		lineEnd_character        = lineEnd_character,
+		separation_character     = separation_character,
+
+		#options
+		additionnalSpacesAllowed = additionnalSpacesAllowed
+	)
 
 
 
 
 #write data into file
-def write(data, filename):
+def write(
+	filename, data,
+
+	#characters
+	comment_character        = COMMENT_CHARACTER,
+	lineEnd_character        = LINE_END_CHARACTER,
+	separation_character     = SEPARATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed = ADDITIONAL_SPACES_ALLOWED
+):
 	'''
 	Write data into a Config file.
 
-	data: dict
 	filename: str
+	data: dict
 
 	Write the data respecting the Config syntax.
 	'''
 
 	#unparse
-	text = toText(data)
+	text = toText(
+		data,
+
+		#characters
+		lineEnd_character        = lineEnd_character,
+		separation_character     = separation_character,
+	)
 
 	#write out
 	f = open(filename, "w")
